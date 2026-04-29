@@ -92,3 +92,17 @@ jobs:
             output/gs.wasm
             output/SHA256SUMS
           generate_release_notes: true
+
+      - name: Update 'latest' release (on every push to main)
+        if: github.ref == 'refs/heads/main'
+        uses: softprops/action-gh-release@v2
+        with:
+          tag_name: latest
+          files: |
+            output/gs.js
+            output/gs.wasm
+            output/SHA256SUMS
+          name: Latest Build (Rolling)
+          body: "This release contains the latest automated build from the main branch."
+          prerelease: true
+          make_latest: true

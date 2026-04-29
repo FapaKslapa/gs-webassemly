@@ -1,0 +1,23 @@
+{
+  "name": "gs-wasm",
+  "version": "1.0.0",
+  "description": "Ghostscript compiled to WebAssembly",
+  "main": "gs.js",
+  "files": [
+    "gs.js",
+    "gs.wasm"
+  ],
+  "repository": {
+    "type": "git",
+    "url": "git+https://github.com/FapaKslapa/gs-webassemly.git"
+  },
+  "keywords": [
+    "ghostscript",
+    "wasm",
+    "webassembly",
+    "pdf",
+    "postscript"
+  ],
+  "author": "",
+  "license": "AGPL-3.0"
+}
