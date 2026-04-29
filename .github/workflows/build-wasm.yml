@@ -5,6 +5,7 @@ name: Build Ghostscript WASM
 #
 # Triggers:
 #   - manual (workflow_dispatch) with Ghostscript version selection
+#   - push to main branch
 #   - push of a v* tag -> also creates a GitHub Release with the two files
 
 on:
@@ -19,6 +20,8 @@ on:
         required: false
         default: '0'
   push:
+    branches:
+      - main
     tags:
       - 'v*'
 
