@@ -1,0 +1,91 @@
+name: Build Ghostscript WASM
+
+# Compiles gs.js + gs.wasm from ghostpdl sources using the ps-wasm pipeline
+# and publishes them as artifacts (and optionally as release assets).
+#
+# Triggers:
+#   - manual (workflow_dispatch) with Ghostscript version selection
+#   - push of a v* tag -> also creates a GitHub Release with the two files
+
+on:
+  workflow_dispatch:
+    inputs:
+      gs_version:
+        description: 'Ghostscript version: "dedddcb" (safe, default), "latest", commit hash, or release tag (e.g., 10.05.0). Note: 10.05.1 has known runtime bugs.'
+        required: true
+        default: 'dedddcb'
+      debug:
+        description: 'Build debug (1) or release (0)'
+        required: false
+        default: '0'
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  build:
+    runs-on: ubuntu-22.04
+    timeout-minutes: 90
+
+    steps:
+      - name: Checkout repo (this project, contains patches/ and build.sh)
+        uses: actions/checkout@v4
+
+      - name: Cache emsdk
+        id: cache-emsdk
+        uses: actions/cache@v4
+        with:
+          path: ~/emsdk
+          key: emsdk-3.1.74-${{ runner.os }}
+
+      - name: Setup Emscripten SDK 3.1.74
+        if: steps.cache-emsdk.outputs.cache-hit != 'true'
+        run: |
+          git clone --depth 1 --branch 3.1.74 https://github.com/emscripten-core/emsdk.git ~/emsdk
+          ~/emsdk/emsdk install 3.1.74
+          ~/emsdk/emsdk activate 3.1.74
+
+      - name: Activate emsdk env
+        run: |
+          source ~/emsdk/emsdk_env.sh
+          echo "PATH=$PATH" >> "$GITHUB_ENV"
+          echo "EMSDK=$EMSDK" >> "$GITHUB_ENV"
+          echo "EMSDK_NODE=$EMSDK_NODE" >> "$GITHUB_ENV"
+
+      - name: Install build dependencies
+        run: |
+          sudo apt-get update
+          sudo apt-get install -y --no-install-recommends \
+              autoconf automake libtool pkg-config bison flex
+
+      - name: Run build.sh
+        env:
+          GS_VERSION: ${{ github.event.inputs.gs_version || 'dedddcb' }}
+          DEBUG: ${{ github.event.inputs.debug || '0' }}
+          MAKE_JOBS: '2'
+          OUTPUT_DIR: ${{ github.workspace }}/output
+          WORK_DIR: ${{ github.workspace }}/work
+          PATCHES_DIR: ${{ github.workspace }}/patches
+        run: |
+          chmod +x ./build.sh
+          ./build.sh
+
+      - name: Upload artifacts
+        uses: actions/upload-artifact@v4
+        with:
+          name: gs-wasm-${{ github.event.inputs.gs_version || 'dedddcb' }}
+          path: |
+            output/gs.js
+            output/gs.wasm
+            output/SHA256SUMS
+          if-no-files-found: error
+
+      - name: Create GitHub Release (only on push of v* tag)
+        if: startsWith(github.ref, 'refs/tags/v')
+        uses: softprops/action-gh-release@v2
+        with:
+          files: |
+            output/gs.js
+            output/gs.wasm
+            output/SHA256SUMS
+          generate_release_notes: true
