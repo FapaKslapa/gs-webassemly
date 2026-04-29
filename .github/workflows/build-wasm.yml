@@ -101,18 +101,18 @@ jobs:
             output/SHA256SUMS
           generate_release_notes: true
 
-      - name: Update 'latest' release (on every push to main)
+      - name: Update Release (on every push to main)
         if: github.ref == 'refs/heads/main'
         uses: softprops/action-gh-release@v2
         with:
-          tag_name: latest
+          tag_name: v${{ steps.pkg_version.outputs.version }}
           files: |
             output/gs.js
             output/gs.wasm
             output/SHA256SUMS
-          name: Build ${{ steps.pkg_version.outputs.version }} (latest)
+          name: v${{ steps.pkg_version.outputs.version }}
           body: |
             Automated build for version ${{ steps.pkg_version.outputs.version }}.
-            This release contains the latest artifacts from the main branch.
-          prerelease: true
+            This release contains the latest artifacts from the main branch for version ${{ steps.pkg_version.outputs.version }}.
+          prerelease: false
           make_latest: true
