@@ -29,6 +29,8 @@ jobs:
   build:
     runs-on: ubuntu-22.04
     timeout-minutes: 90
+    permissions:
+      contents: write
 
     steps:
       - name: Checkout repo (this project, contains patches/ and build.sh)
@@ -73,6 +75,12 @@ jobs:
           chmod +x ./build.sh
           ./build.sh
 
+      - name: Get version from package.json
+        id: pkg_version
+        run: |
+          VERSION=$(node -p "require('./package.json').version")
+          echo "version=$VERSION" >> "$GITHUB_OUTPUT"
+
       - name: Upload artifacts
         uses: actions/upload-artifact@v4
         with:
@@ -102,7 +110,9 @@ jobs:
             output/gs.js
             output/gs.wasm
             output/SHA256SUMS
-          name: Latest Build (Rolling)
-          body: "This release contains the latest automated build from the main branch."
+          name: Build ${{ steps.pkg_version.outputs.version }} (latest)
+          body: |
+            Automated build for version ${{ steps.pkg_version.outputs.version }}.
+            This release contains the latest artifacts from the main branch.
           prerelease: true
           make_latest: true

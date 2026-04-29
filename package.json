@@ -1,6 +1,6 @@
 {
   "name": "gs-wasm",
-  "version": "1.0.0",
+  "version": "0.0.1",
   "description": "Ghostscript compiled to WebAssembly",
   "main": "gs.js",
   "files": [
